@@ -1,0 +1,2 @@
+include ':app',":groupedadapter"
+rootProject.name = "blackzone-pro"

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="me.piebridge.prevent"
+    >
+
+
+    <permission
+        android:name="me.piebridge.prevent.permission.MANAGER"
+        android:protectionLevel="signature" />
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="me.piebridge.prevent.permission.MANAGER" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/light">
+
+        <activity
+            android:name=".ui.PreventActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:label="@string/app_name"
+            android:windowSoftInputMode="stateHidden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <action android:name="me.piebridge.prevent.NOT_SUPPORTED" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.AdvancedSettingsActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:label="@string/advanced_settings"
+            android:windowSoftInputMode="stateHidden" />
+
+        <activity
+            android:name=".ui.UserGuideActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:label="@string/user_guide"
+            android:windowSoftInputMode="stateHidden" />
+
+        <provider
+            android:name=".ui.PreventProvider"
+            android:authorities="me.piebridge.prevent.provider"
+            android:permission="android.permission.SHUTDOWN" />
+
+    </application>
+
+</manifest>

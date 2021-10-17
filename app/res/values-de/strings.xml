@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Brevent</string>
+
+    <string name="soak_version">Dies ist keine Releaseversion und könnte Dein Gerät unnutzbar machen. Falls Du nichts testen willst, deinstalliere diese Version bitte und wechsle zu einer Releaseversion.</string>
+
+    <string name="install_internal">Brevent sollte im internen Speicher installiert werden.</string>
+    <string name="no_patched">Please patch your ROM with "Brevent" (English).</string>
+
+    <!-- receiver -->
+    <string name="no_prevents">Bitte konfiguriere die Blockier-Liste.</string>
+    <string name="updated_prevents">Blockier-Liste auf %1$d aktualisiert</string>
+    <string name="not_supported">ROM wird nicht unterstützt: Bitte melde den Fehler an den Entwickler.</string>
+
+    <!-- main activity -->
+    <string name="version_mismatch">Bitte starte Dein Gerät neu, um die aktuelle Version zu aktivieren</string>
+    <string name="reboot">Geräte-Neustart</string>
+    <string name="are_you_sure">Bist Du sicher?</string>
+    <string name="applications">Anwendungen</string>
+    <string name="prevent_list">Blockier-Liste</string>
+    <string name="prevent">Automatisch blockieren</string>
+    <string name="remove">Blockieren entfernen</string>
+
+    <!-- search hint -->
+    <string name="query_hint">\"-3\" für Benutzeranwendungen</string>
+    <string name="query_hint_system">\"-s\" für Systemanwendungen</string>
+
+    <!-- main menu -->
+    <string name="switch_theme">Schema wechseln</string>
+    <string name="user_guide">Benutzerhandbuch</string>
+
+    <!-- app status -->
+    <string name="retrieving">Status wird überprüft, bitte warten. . .</string>
+    <string name="loading">Lädt. . .</string>
+    <string name="not_running">(nicht gestartet)</string>
+    <!-- http://developer.android.com/reference/android/app/ActivityManager.RunningAppProcessInfo.html#constants -->
+    <string name="importance_background">Hintergrund</string>
+    <string name="importance_foreground">Vordergrund</string>
+    <string name="importance_empty">Leer</string>
+    <string name="importance_perceptible">Wahrnehmbar</string>
+    <string name="importance_service">Service</string>
+    <string name="importance_visible">Sichtbar</string>
+    <string name="importance_gone">Gestoppt</string>
+    <string name="importance_foreground_service">Vordergrund-Service</string>
+    <string name="importance_top_sleeping">Vordergrund-Schlafend</string>
+    <string name="importance_service_not_started">Service (Nicht gestartet)</string>
+    <string name="importance_inactive">Inaktiv</string>
+
+    <!-- app menu -->
+    <string name="app_info">App-Info</string>
+    <string name="open">Öffnen</string>
+    <string name="uninstall">Deinstallieren</string>
+    <string name="app_notifications">App-Benachrichtigungen</string>
+
+    <!-- advanced settings -->
+    <string name="destroy_processes">Prozesse nicht speichern</string>
+    <string name="destroy_processes_summary">Beenden der Anwendung erzwingen, sobald der Benutzer alle Activities beendet hat (nicht empfohlen)</string>
+    <string name="backup">Sicherung</string>
+    <string name="backup_prevent_list">Blockier-Liste auf externen Speicher sichern</string>
+    <string name="lock_sync">Synchronisieren sperren</string>
+    <string name="lock_sync_settings">Verhindert, dass Apps deaktivierte Synchronisationseinträge wieder einschalten</string>
+    <string name="auto_prevent">Automatisch verhindern</string>
+    <string name="auto_update_prevent">Neue Apps automatisch blockieren</string>
+    <string name="use_app_standby">App-Ruhezustand</string>
+    <string name="use_app_standby_settings">Versetze Apps in Standby, anstatt ein Beenden zu erzwingen</string>
+    <string name="allow_empty_sender">Unbekannte Aufrufe erlauben</string>
+    <string name="allow_empty_sender_in_service">Anderen Apps erlauben, Services zu starten. Dies ist nützlich, um manche Apps direkt durch Benachrichtigungen oder Widgets zu öffnen, es könnte jedoch auch unerwünschte Auswirkungen haben</string>
+    <string name="force_stop_signature_apps">Wichtige Systemanwendungen blockieren</string>
+    <string name="force_stop_uncheckable_signature_apps">Diese sind nicht anklickbar</string>
+    <string name="force_stop_label">Beenden von Hintergrund-Apps erzwingen</string>
+    <string name="force_stop_summary">%1$s nach Bildschirm aus und Inaktivität der Hintergrund-Apps</string>
+    <string name="force_stop_never">Nie (Empfohlen)</string>
+    <string name="force_stop_5min">5 Minuten</string>
+    <string name="force_stop_10min">10 Minuten</string>
+    <string name="force_stop_15min">15 Minuten</string>
+    <string name="force_stop_30min">30 Minuten</string>
+    <string name="force_stop_1hour">1 Stunde</string>
+
+    <!-- user guide menu -->
+    <string name="version">Version</string>
+    <string name="feedback">Feedback</string>
+    <string name="report_bug">Fehler melden</string>
+    <string name="advanced_settings">Erweiterte Einstellungen</string>
+    <string name="choose_email">Bitte wähle einen E-Mail-Client aus</string>
+
+    <!-- donation -->
+    <string name="donation">Spenden sind gern gesehen, wenn Du magst.</string>
+    <string name="select_qr_code">QR-Code aus Album wählen</string>
+    <string name="paypal">PayPal</string>
+
+</resources>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_userapp"
+        android:icon="@drawable/user_app"
+        android:title="@string/title_user_app" />
+
+    <item
+        android:id="@+id/navigation_systemapp"
+        android:icon="@drawable/system_app"
+        android:title="@string/title_system_app" />
+
+</menu>

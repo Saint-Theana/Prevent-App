@@ -1,0 +1,120 @@
+
+plugins {
+   id 'com.android.application'
+}
+
+
+def isIde = { ->
+    def ide = false
+    def taskRequests = project.gradle.startParameter.taskRequests
+    if (taskRequests?.empty) {
+        ide = true
+    } else {
+        taskRequests[0].args.any {
+            if (it.endsWith('generateDebugSources') || it.endsWith('assembleDebug')) {
+                ide = true
+                return true
+            }
+        }
+        return ide
+    }
+}
+
+android {
+    compileSdkVersion 30
+    buildToolsVersion "27.0.0"
+
+
+    defaultConfig {
+        versionCode 1
+        applicationId "me.piebridge.prevent"
+        versionName "3.1.2"
+        minSdkVersion 29
+        targetSdkVersion 30
+        maxSdkVersion 30
+        buildConfigField "boolean", "RELEASE", "true"
+        buildConfigField "String", "DONATE_ALIPAY", "null"
+        buildConfigField "String", "DONATE_PAYPAL", "null"
+        buildConfigField "String", "EMAIL", "null"
+
+    }
+
+    buildTypes {
+        release {
+            lintOptions {
+                checkReleaseBuilds false
+                abortOnError false
+            }
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+        }
+        debug {
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+
+            if (isIde()) {
+                java.srcDirs = ['src', 'services/core/java', /*'AndroidHiddenAPI'*/]
+            } else {
+                java.srcDirs = ['src', 'services/core/java']
+            }
+
+            resources.srcDirs = ['src']
+            aidl.srcDirs = ['src']
+            renderscript.srcDirs = ['src']
+            res.srcDirs = ['res']
+            assets.srcDirs = ['assets']
+        }
+        androidTest.setRoot('tests')
+    }
+
+    if (new File("ant.properties").exists()) {
+        Properties properties = new Properties()
+        properties.load(new FileInputStream(file("ant.properties")))
+
+        signingConfigs {
+            release {
+                storeFile file(properties['key.store'])
+                storePassword properties['key.store.password']
+                keyAlias properties['key.alias']
+                keyPassword properties['key.alias.password']
+            }
+        }
+
+        buildTypes {
+            release {
+                signingConfig signingConfigs.release
+            }
+            debug {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation 'androidx.viewpager:viewpager:1.0.0'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.0.0'
+    implementation 'androidx.preference:preference:1.1.0'
+    compileOnly fileTree(dir: 'lib', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'com.google.android.material:material:1.2.0'
+    implementation project(":groupedadapter")
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << '-Xlint:unchecked' << '-Xlint:deprecation'
+    if (!isIde()) {
+        options.compilerArgs << '-Xbootclasspath/p:' + fileTree(dir: 'lib', include: ['*.jar']).asPath
+    }
+}
