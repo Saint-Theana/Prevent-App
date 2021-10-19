@@ -54,7 +54,9 @@ public final class PreventIntent {
             KEY_LOCK_SYNC_SETTINGS,
             KEY_AUTO_PREVENT,
             KEY_STOP_SIGNATURE_APPS,
-            KEY_USE_APP_STANDBY
+            KEY_USE_APP_STANDBY,
+            KEY_OPTIMIZE_AUDIO,
+            KEY_OPTIMIZE_VPN
     };
 
     public static final Uri CONTENT_URI = Uri.parse("content://me.piebridge.prevent.provider");
