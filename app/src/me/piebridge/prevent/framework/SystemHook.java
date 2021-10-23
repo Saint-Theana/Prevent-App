@@ -81,9 +81,9 @@ public final class SystemHook {
     private static final Map<String, Boolean> syncPackages = new HashMap<String, Boolean>();
     private static final HashMap<String, String> audioFocusedActivity = new HashMap<String, String>();
     private static String vpnEstablishedActivity=null;
-   // private static final List<String> onCleanUpRemovedTaskPandingVpnEstablishedActivity=new ArrayList<String>();
-  //  private static final List<String> onDestroyActivityTaskPandingVpnEstablishedActivity=new ArrayList<String>();
-   // private static final HashMap<String, String> onCleanUpRemovedTaskPandingAudioFocusedActivity=new HashMap<String, String>();
+    // private static final List<String> onCleanUpRemovedTaskPandingVpnEstablishedActivity=new ArrayList<String>();
+    //  private static final List<String> onDestroyActivityTaskPandingVpnEstablishedActivity=new ArrayList<String>();
+    // private static final HashMap<String, String> onCleanUpRemovedTaskPandingAudioFocusedActivity=new HashMap<String, String>();
     //private static final HashMap<String, Object> onDestroyActivityPandingAudioFocusedActivity=new HashMap<String, Object>();
     private static final Object lock = new Object();
     private static Context mContext;
@@ -470,9 +470,9 @@ public final class SystemHook {
                 String[] names = mContext.getPackageManager().getPackagesForUid(uid);
                 String name=null;
                 if (names != null) {
-                   name= Arrays.asList(names).toString();
+                    name= Arrays.asList(names).toString();
                 }
-                //PreventLog.d("doKillNoFather uid："+uid+" pid:"+pid+" ppid:"+HideApiUtils.getParentPid(pid)+" name:"+name);
+                //PreventLog.d("doKillNoFather uid锛?+uid+" pid:"+pid+" ppid:"+HideApiUtils.getParentPid(pid)+" name:"+name);
                 if (HideApiUtils.getParentPid(pid) == 1 && uid >= PackageUtils.FIRST_APPLICATION_UID) {
                     killIfNeed(uid, pid);
                 }
@@ -481,11 +481,11 @@ public final class SystemHook {
     }
 
     private static void killIfNeed(int uid, int pid) {
-        PreventLog.d("killIfNeed uid："+uid+" pid:"+pid);
+        PreventLog.d("killIfNeed uid:"+uid+" pid:"+pid);
         String[] names = mContext.getPackageManager().getPackagesForUid(uid);
         if (names == null || isPrevent(names)) {
             for(String name:names){
-                PreventLog.d("killIfNeed name："+name);
+                PreventLog.d("killIfNeed name:"+name);
             }
             Process.killProcess(pid);
             String name;
@@ -520,6 +520,7 @@ public final class SystemHook {
     public static void onLaunchActivity(Object activityRecord) {
         expired = true;
         currentPackageName = ActivityRecordUtils.getPackageName(activityRecord);
+
         PreventLog.v("launch, current: " + currentPackageName);
         if (systemReceiver != null) {
             systemReceiver.onLaunchActivity(activityRecord);
@@ -780,8 +781,11 @@ public final class SystemHook {
             inactive(packageName);
             setBackground(packageName, AppOpsManager.MODE_IGNORED);
             return false;
+        } else if (systemReceiver.countCounter(packageName)>0) {
+            PreventLog.i(packageName + "has activities, seems not safe to force stop");
+            return false;
         } else if (getCurrentPackageNames().contains(packageName)) {
-            PreventLog.i(packageName + " seems not safe to force stop");
+            PreventLog.i(packageName + "is current package, seems not safe to force stop");
             return false;
         } else if (PackageUtils.isInputMethod(mContext, packageName)) {
             PreventLog.i(packageName + " inputmethod cannot be force stoped");
@@ -794,13 +798,13 @@ public final class SystemHook {
     }
 
     public static void setBackground(String packageName, int mode) {
-            try {
-                IAppOpsService appOpsService = IAppOpsService.Stub.asInterface(ServiceManager.getService(Context.APP_OPS_SERVICE));
-                int packageUid = AppGlobals.getPackageManager().getPackageUid(packageName, PackageManager.MATCH_UNINSTALLED_PACKAGES, 0);
-                appOpsService.setMode(AppOpsManager.OP_RUN_IN_BACKGROUND, packageUid, packageName, mode);
-            } catch (RemoteException e) {
-                PreventLog.d("cannot set background for " + packageName, e);
-            }
+        try {
+            IAppOpsService appOpsService = IAppOpsService.Stub.asInterface(ServiceManager.getService(Context.APP_OPS_SERVICE));
+            int packageUid = AppGlobals.getPackageManager().getPackageUid(packageName, PackageManager.MATCH_UNINSTALLED_PACKAGES, 0);
+            appOpsService.setMode(AppOpsManager.OP_RUN_IN_BACKGROUND, packageUid, packageName, mode);
+        } catch (RemoteException e) {
+            PreventLog.d("cannot set background for " + packageName, e);
+        }
     }
 
     public static Context getContext() {

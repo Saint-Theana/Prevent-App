@@ -1,2 +1,2 @@
 include ':app',":groupedadapter"
-rootProject.name = "blackzone-pro"
+rootProject.name = "blackzone-new"

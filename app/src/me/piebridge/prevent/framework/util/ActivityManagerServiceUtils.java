@@ -141,7 +141,13 @@ public class ActivityManagerServiceUtils {
                             String packageName = ActivityRecordUtils.getPackageName(mActivity);
                             PreventLog.d("activityRecord: " + mActivity + ", packageName: " + packageName + ", message: " + message);
                             if (packageName != null) {
-                                packageNames.add(packageName);
+                                if(checkVisible){
+                                    if(!isVisible(stack,mActivity,message)){
+                                        packageNames.add(packageName);
+                                    }
+                                }else{
+                                    packageNames.add(packageName);
+                                }
                             }
                         }
                     }

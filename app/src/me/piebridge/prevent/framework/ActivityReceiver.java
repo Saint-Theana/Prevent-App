@@ -36,8 +36,7 @@ abstract class ActivityReceiver extends BroadcastReceiver {
     protected final HashMap<String, String> audioFocusedActivity = new HashMap<String, String>();
     private final Map<String, Integer> packageUids = new HashMap<String, Integer>();
     private final Map<String, Set<String>> abnormalProcesses = new ConcurrentHashMap<String, Set<String>>();
-    private final Map<String, Map<Integer, AtomicInteger>> packageCounters = new ConcurrentHashMap<String, Map<Integer, AtomicInteger>>();
-    private final Map<String, Long> leavingPackages = new ConcurrentHashMap<String, Long>();
+   private final Map<String, Long> leavingPackages = new ConcurrentHashMap<String, Long>();
     private final Set<String> checkLeavingNext = new TreeSet<String>();
     private final ScheduledThreadPoolExecutor singleExecutor = new ScheduledThreadPoolExecutor(0x2);
     protected Context mContext;
@@ -46,6 +45,8 @@ abstract class ActivityReceiver extends BroadcastReceiver {
     protected String vpnEstablishedActivity = null;
     private boolean screen = false;
     private ScheduledFuture<?> leavingFuture;
+    protected Map<String, List<String>> mActivityRecord=new ConcurrentHashMap<String, List<String>>();
+
 
     public ActivityReceiver(Context context, Map<String, Boolean> preventPackages) {
         mContext = context;
@@ -53,77 +54,14 @@ abstract class ActivityReceiver extends BroadcastReceiver {
     }
 
     protected int countCounter(String packageName) {
-        return countCounter(-1, packageName);
+        if(mActivityRecord.containsKey(packageName)){
+            List activities = mActivityRecord.get(packageName);
+             return activities.size();
+        }
+        return -1;
     }
 
-    private int countCounter(int currentPid, String packageName) {
-        int count = 0;
-        Map<Integer, AtomicInteger> values = packageCounters.get(packageName);
-        if (values == null) {
-            return count;
-        }
-        Iterator<Map.Entry<Integer, AtomicInteger>> iterator = values.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<Integer, AtomicInteger> entry = iterator.next();
-            int pid = entry.getKey();
-            if (pid == currentPid || checkPid(pid, packageName)) {
-                count += entry.getValue().get();
-            } else {
-                LogUtils.logIgnore(entry.getKey(), packageName);
-                iterator.remove();
-            }
-        }
-        return count;
-    }
 
-    private boolean checkPid(int pid, String packageName) {
-        Integer uid = packageUids.get(packageName);
-        if (uid == null) {
-            return false;
-        }
-        try {
-            if (HideApiUtils.getUidForPid(pid) != uid) {
-                return false;
-            }
-        } catch (Throwable t) { // NOSONAR
-            PreventLog.e("cannot get uid for " + pid, t);
-        }
-        String processName = getProcessName(uid, pid, packageName);
-        if (isNormalProcessName(processName, packageName)) {
-            return true;
-        }
-        PreventLog.v("pid: " + pid + ", package: " + packageName + ", process: " + processName);
-        Set<String> abnormalPackages = abnormalProcesses.get(processName);
-        return abnormalPackages != null && abnormalPackages.contains(packageName);
-    }
-
-    private String getProcessName(int uid, int pid, String packageName) {
-        String[] packages = mContext.getPackageManager().getPackagesForUid(uid);
-        if (packages != null && packages.length == 1) {
-            return packageName;
-        } else {
-            return SystemHook.getProcessName(pid);
-        }
-    }
-
-    private boolean isNormalProcessName(String processName, String packageName) {
-        return (processName != null) && (processName.equals(packageName)
-                || processName.startsWith(packageName + ":")
-                || "<pre-initialized>".equals(processName));
-    }
-
-    private void setAbnormalProcessIfNeeded(String processName, String packageName) {
-        if (!isNormalProcessName(processName, packageName)) {
-            Set<String> abnormalProcess = abnormalProcesses.get(processName);
-            if (abnormalProcess == null) {
-                abnormalProcess = new HashSet<String>();
-                abnormalProcesses.put(processName, abnormalProcess);
-            }
-            if (abnormalProcess.add(packageName)) {
-                PreventLog.d("package " + packageName + " has abnormal process: " + processName);
-            }
-        }
-    }
 
     public void onLaunchActivity(Object activityRecord) {
         String packageName = ActivityRecordUtils.getPackageName(activityRecord);
@@ -135,29 +73,27 @@ abstract class ActivityReceiver extends BroadcastReceiver {
         if (mPreventPackages.containsKey(packageName)) {
             mPreventPackages.put(packageName, false);
         }
-        int pid = ActivityRecordUtils.getPid(activityRecord);
-        int uid = ActivityRecordUtils.getUid(activityRecord);
-        String processName = ActivityRecordUtils.getInfo(activityRecord).processName;
-        setAbnormalProcessIfNeeded(processName, packageName);
-        if (uid > 0) {
-            packageUids.put(packageName, uid);
+
+        if(mActivityRecord.containsKey(packageName)){
+            String activityName = ActivityRecordUtils.getActivityName(activityRecord);
+            if(activityName!=null){
+                List activities = mActivityRecord.get(packageName);
+                if(activities.contains(activityName)){
+
+                }else{
+                    activities.add(activityName);
+                }
+                LogUtils.logActivity(activityName+"activity already started", packageName, activities.size());
+            }
+        }else{
+            String activityName = ActivityRecordUtils.getActivityName(activityRecord);
+            if(activityName!=null){
+                List activities = new ArrayList();
+                activities.add(activityName);
+                mActivityRecord.put(packageName,activities);
+                LogUtils.logActivity("start activity", packageName, 1);
+            }
         }
-        Map<Integer, AtomicInteger> packageCounter = packageCounters.get(packageName);
-        if (packageCounter == null) {
-            packageCounter = new LinkedHashMap<Integer, AtomicInteger>();
-            packageCounters.put(packageName, packageCounter);
-        }
-        AtomicInteger pidCounter = packageCounter.get(pid);
-        if (pidCounter == null) {
-            pidCounter = new AtomicInteger();
-            packageCounter.put(pid, pidCounter);
-        }
-        pidCounter.incrementAndGet();
-        int count = countCounter(pid, packageName);
-        if (count == 1) {
-            SystemHook.checkSync(packageName);
-        }
-        LogUtils.logActivity("start activity", packageName, count);
         removeLeaving(packageName);
     }
 
@@ -167,25 +103,25 @@ abstract class ActivityReceiver extends BroadcastReceiver {
             PreventLog.e("package " + packageName + " destroyed ");
             return false;
         }
-        Map<Integer, AtomicInteger> packageCounter = packageCounters.get(packageName);
-        if (packageCounter != null) {
-            int pid = ActivityRecordUtils.getPid(activityRecord);
-            AtomicInteger pidCounter = packageCounter.get(pid);
-            if (pidCounter != null) {
-                pidCounter.decrementAndGet();
+
+        if(mActivityRecord.containsKey(packageName)){
+            String activityName = ActivityRecordUtils.getActivityName(activityRecord);
+            if(activityName!=null){
+                List activities = mActivityRecord.get(packageName);
+                if(activities.contains(activityName)){
+                    activities.remove(activityName);
+                    LogUtils.logActivity("destroy activity", packageName, activities.size());
+                }
+                if (activities.size() > 0) {
+                    return false;
+                }
             }
-        }
-        int count = countCounter(packageName);
-        LogUtils.logActivity("destroy activity", packageName, count);
-        if (count > 0) {
-            return false;
         }
         SystemHook.updateRunningGapps(packageName, false);
         if (mPreventPackages.containsKey(packageName)) {
             mPreventPackages.put(packageName, true);
             LogUtils.logForceStop("destroy activity", packageName, "if needed in " + SystemHook.TIME_DESTROY + "s");
             SystemHook.checkForceStop(packageName, SystemHook.TIME_DESTROY);
-
             //SystemHook.checkRunningServices(packageName, SystemHook.TIME_DESTROY);
         } else {
             SystemHook.checkRunningServices(null, SystemHook.TIME_DESTROY);
@@ -410,18 +346,15 @@ abstract class ActivityReceiver extends BroadcastReceiver {
     }
 
     private boolean shouldStop(String packageName, int pid) {
-        countCounter(packageName);
-        Map<Integer, AtomicInteger> values = packageCounters.get(packageName);
-        if (values == null) {
-            return true;
+        if(mActivityRecord.containsKey(packageName)){
+            List activities = mActivityRecord.get(packageName);
+            return activities.isEmpty();
         }
-        Set<Integer> pids = new HashSet<Integer>(values.keySet());
-        pids.remove(pid);
-        return pids.isEmpty();
+        return true;
     }
 
     protected void removePackageCounters(String packageName) {
-        packageCounters.remove(packageName);
+        mActivityRecord.remove(packageName);
     }
 
     protected void onActivityRequestAudioFocus(int uid, int pid, String clientId, String packageName) {
@@ -440,11 +373,10 @@ abstract class ActivityReceiver extends BroadcastReceiver {
             for (String key : keys) {
                 audioFocusedActivity.remove(key);
             }
-          /*  int count = countCounter(packageName);
+            int count = countCounter(packageName);
             if (count == 0) {
                 SystemHook.checkForceStop(packageName, SystemHook.TIME_DESTROY);
             }
-            */
         }
     }
 
@@ -460,12 +392,10 @@ abstract class ActivityReceiver extends BroadcastReceiver {
             for (String key : keys) {
                 audioFocusedActivity.remove(key);
             }
-            /*
             int count = countCounter(packageName);
             if (count == 0) {
                 SystemHook.checkForceStop(packageName, SystemHook.TIME_DESTROY);
             }
-             */
         }
     }
 
@@ -475,12 +405,10 @@ abstract class ActivityReceiver extends BroadcastReceiver {
 
     protected void onVpnConnectionDisconnected() {
         if (vpnEstablishedActivity!=null) {
-            /*
             int count = countCounter(vpnEstablishedActivity);
             if (count == 0) {
                 SystemHook.checkForceStop(vpnEstablishedActivity, SystemHook.TIME_DESTROY);
             }
-             */
             vpnEstablishedActivity = null;
         }
     }

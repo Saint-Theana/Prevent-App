@@ -134,4 +134,7 @@ public class ActivityRecordUtils {
         }
     }
 
+    public static String getActivityName(Object target) {
+        return (String) getField(target, "stringName");
+    }
 }
