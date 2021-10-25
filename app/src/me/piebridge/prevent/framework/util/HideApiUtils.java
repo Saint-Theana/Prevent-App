@@ -1,7 +1,6 @@
 package me.piebridge.prevent.framework.util;
 
 import android.app.ActivityManager;
-import android.app.ActivityManagerNative;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Process;

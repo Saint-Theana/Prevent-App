@@ -105,28 +105,9 @@ public class FileUtils {
         return packages;
     }
 
-    private static void loadExternal(Set<String> packages, Context context) {
-        for (File file : ExternalFileUtils.getExternalFilesDirs(context)) {
-            if (file != null) {
-                packages.addAll(load(new File(file, PREVENT_LIST)));
-                if (!packages.isEmpty()) {
-                    return;
-                }
-            }
-        }
-        if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
-            File sdcard = Environment.getExternalStorageDirectory();
-            if (sdcard != null) {
-                packages.addAll(load(new File(sdcard, PREVENT_LIST)));
-            }
-        }
-    }
 
     public static Set<String> load(Context context, String prevent) {
         Set<String> packages = load(new File(prevent));
-        if (context != null && packages.isEmpty()) {
-            loadExternal(packages, context);
-        }
         return packages;
     }
 

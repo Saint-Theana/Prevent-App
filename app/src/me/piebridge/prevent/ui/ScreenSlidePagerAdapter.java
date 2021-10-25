@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.fragment.app.FragmentStatePagerAdapter;
 
 /**
@@ -17,7 +18,7 @@ public class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
     private final PreventFragment[] mFragments;
 
     public ScreenSlidePagerAdapter(FragmentManager fm) {
-        super(fm);
+        super(fm, FragmentStatePagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
         mFragments = new PreventFragment[2];
     }
 

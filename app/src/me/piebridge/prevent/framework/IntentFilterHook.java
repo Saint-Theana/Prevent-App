@@ -13,7 +13,7 @@ import android.os.Process;
 import java.util.Map;
 import java.util.Set;
 
-import me.piebridge.prevent.common.GmsUtils;
+
 import me.piebridge.prevent.framework.util.AlarmManagerServiceUtils;
 import me.piebridge.prevent.framework.util.BroadcastFilterUtils;
 import me.piebridge.prevent.framework.util.LogUtils;
@@ -78,11 +78,6 @@ public class IntentFilterHook {
     private static boolean isPrevent(String packageName, boolean receiver) {
         Boolean prevents = mPreventPackages.get(packageName);
         if (prevents == null) {
-            PackageManager pm = mContext.getPackageManager();
-            if (receiver && GmsUtils.isGapps(packageName) && pm.getLaunchIntentForPackage(packageName) != null) {
-                PreventLog.d("allow " + packageName + " to use gms for next service");
-                SystemHook.restoreLater(packageName);
-            }
             return false;
         }
         return prevents;
@@ -99,9 +94,6 @@ public class IntentFilterHook {
         return false;
     }
 
-    private static boolean cannotPreventGms(String packageName, String sender) {
-        return GmsUtils.isGms(packageName) && (GmsUtils.isGapps(sender) || GmsUtils.isGappsCaller(mContext));
-    }
 
     private static boolean isSafeReceiverAction(boolean isSystem, String action) {
         return isSystem && SafeActionUtils.isSafeAction(action);
@@ -126,12 +118,7 @@ public class IntentFilterHook {
             return IntentFilterMatchResult.NONE;
         }
         boolean isSystem = isSystemSender(sender);
-        if (cannotPreventGms(packageName, sender)) {
-            LogUtils.logIntentFilter(false, sender, filter, action, packageName);
-            return IntentFilterMatchResult.NONE;
-        } else if (GmsUtils.isGcmAction(sender, isSystem, action)) {
-            return allowSafeIntent(filter, sender, action, packageName);
-        } else if (isSafeReceiverAction(isSystem, action)) {
+        if (isSafeReceiverAction(isSystem, action)) {
             LogUtils.logIntentFilter(false, sender, filter, action, packageName);
             return IntentFilterMatchResult.NONE;
         }
@@ -143,7 +130,6 @@ public class IntentFilterHook {
     private static boolean isSafeServiceAction(String action) {
         return "android.content.SyncAdapter".equals(action)
                 || AccountManager.ACTION_AUTHENTICATOR_INTENT.equals(action)
-                || GmsUtils.isGcmRegisterAction(action)
                 || action.startsWith("android.nfc.cardemulation");
     }
 

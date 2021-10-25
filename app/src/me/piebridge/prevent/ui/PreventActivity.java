@@ -349,8 +349,6 @@ public class PreventActivity extends AppCompatActivity implements NavigationView
             }
             savePackages();
             setUnchecked();
-        } else if (id == R.string.user_guide) {
-            startActivity(new Intent(this, UserGuideActivity.class));
         }
         selections.clear();
         checkSelection();

@@ -69,7 +69,6 @@ abstract class ActivityReceiver extends BroadcastReceiver {
             return;
         }
         SystemHook.cancelCheck(packageName);
-        SystemHook.updateRunningGapps(packageName, true);
         if (mPreventPackages.containsKey(packageName)) {
             mPreventPackages.put(packageName, false);
         }
@@ -77,7 +76,7 @@ abstract class ActivityReceiver extends BroadcastReceiver {
         if(mActivityRecord.containsKey(packageName)){
             String activityName = ActivityRecordUtils.getActivityName(activityRecord);
             if(activityName!=null){
-                List activities = mActivityRecord.get(packageName);
+                List<String> activities = mActivityRecord.get(packageName);
                 if(activities.contains(activityName)){
 
                 }else{
@@ -88,7 +87,7 @@ abstract class ActivityReceiver extends BroadcastReceiver {
         }else{
             String activityName = ActivityRecordUtils.getActivityName(activityRecord);
             if(activityName!=null){
-                List activities = new ArrayList();
+                List<String> activities = new ArrayList<String>();
                 activities.add(activityName);
                 mActivityRecord.put(packageName,activities);
                 LogUtils.logActivity("start activity", packageName, 1);
@@ -103,7 +102,6 @@ abstract class ActivityReceiver extends BroadcastReceiver {
             PreventLog.e("package " + packageName + " destroyed ");
             return false;
         }
-
         if(mActivityRecord.containsKey(packageName)){
             String activityName = ActivityRecordUtils.getActivityName(activityRecord);
             if(activityName!=null){
@@ -117,29 +115,33 @@ abstract class ActivityReceiver extends BroadcastReceiver {
                 }
             }
         }
-        SystemHook.updateRunningGapps(packageName, false);
         if (mPreventPackages.containsKey(packageName)) {
             mPreventPackages.put(packageName, true);
             LogUtils.logForceStop("destroy activity", packageName, "if needed in " + SystemHook.TIME_DESTROY + "s");
             SystemHook.checkForceStop(packageName, SystemHook.TIME_DESTROY);
             //SystemHook.checkRunningServices(packageName, SystemHook.TIME_DESTROY);
-        } else {
+        }
+        /*else {
             SystemHook.checkRunningServices(null, SystemHook.TIME_DESTROY);
         }
-        SystemHook.killNoFather();
+
+         */
+        //SystemHook.killNoFather();
         return true;
     }
 
     public void onDestroyActivity(String reason, String packageName) {
-        SystemHook.updateRunningGapps(packageName, false);
         if (mPreventPackages.containsKey(packageName)) {
             mPreventPackages.put(packageName, true);
             LogUtils.logForceStop(reason, packageName, "destroy in " + SystemHook.TIME_SUICIDE + "s");
-            SystemHook.checkRunningServices(packageName, SystemHook.TIME_SUICIDE);
-        } else {
+            SystemHook.checkForceStop(packageName, SystemHook.TIME_SUICIDE);
+        }
+        /*else {
             SystemHook.checkRunningServices(null, SystemHook.TIME_SUICIDE < SystemHook.TIME_DESTROY ? SystemHook.TIME_DESTROY : SystemHook.TIME_SUICIDE);
         }
-        SystemHook.killNoFather();
+
+         */
+        //SystemHook.killNoFather();
     }
 
     public void onResumeActivity(Object activityRecord) {
@@ -148,7 +150,6 @@ abstract class ActivityReceiver extends BroadcastReceiver {
             return;
         }
         SystemHook.cancelCheck(packageName);
-        SystemHook.updateRunningGapps(packageName, true);
         if (Boolean.TRUE.equals(mPreventPackages.get(packageName))) {
             mPreventPackages.put(packageName, false);
         }
@@ -338,10 +339,10 @@ abstract class ActivityReceiver extends BroadcastReceiver {
         if (!shouldStop(packageName, pid)) {
             return;
         }
-        SystemHook.updateRunningGapps(packageName, false);
         if (mPreventPackages.containsKey(packageName)) {
             mPreventPackages.put(packageName, true);
-            SystemHook.checkRunningServices(packageName, SystemHook.TIME_IMMEDIATE < SystemHook.TIME_DESTROY ? SystemHook.TIME_DESTROY : SystemHook.TIME_IMMEDIATE);
+            SystemHook.checkForceStop(packageName, SystemHook.TIME_DESTROY);
+            //SystemHook.checkRunningServices(packageName, SystemHook.TIME_IMMEDIATE < SystemHook.TIME_DESTROY ? SystemHook.TIME_DESTROY : SystemHook.TIME_IMMEDIATE);
         }
     }
 

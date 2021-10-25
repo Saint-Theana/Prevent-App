@@ -30,7 +30,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import me.piebridge.prevent.BuildConfig;
 import me.piebridge.prevent.common.Configuration;
-import me.piebridge.prevent.common.GmsUtils;
 import me.piebridge.prevent.common.PackageUtils;
 import me.piebridge.prevent.common.PreventIntent;
 import me.piebridge.prevent.common.TimeUtils;
@@ -282,13 +281,6 @@ public class SystemReceiver extends ActivityReceiver {
 
     private void handleGetPackages(String action) {
         Map<String, Boolean> preventPackages = new TreeMap<String, Boolean>(mPreventPackages);
-        if (!SystemHook.canStopGms()) {
-            for (String packageName : GmsUtils.getGmsPackages()) {
-                if (Boolean.TRUE.equals(preventPackages.get(packageName))) {
-                    preventPackages.put(packageName, false);
-                }
-            }
-        }
         int size = preventPackages.size();
         setResultCode(size);
         setResultData(new JSONObject(preventPackages).toString());
@@ -401,7 +393,6 @@ public class SystemReceiver extends ActivityReceiver {
     private void handlePackageRestarted(String action, String packageName) {
         LogUtils.logRequestInfo(action, packageName, -1);
         removePackageCounters(packageName);
-        SystemHook.updateRunningGapps(packageName, false);
         if (mPreventPackages.containsKey(packageName)) {
             mPreventPackages.put(packageName, true);
         }

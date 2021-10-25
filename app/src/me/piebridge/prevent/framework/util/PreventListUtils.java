@@ -128,7 +128,7 @@ public final class PreventListUtils {
         }
 
         String appName = ResourcesUtils.getString(resources, "app_name");
-        Notification notification = new NotificationCompat.Builder(context)
+        Notification notification = new NotificationCompat.Builder(context,"default")
                 .setAutoCancel(true)
                 .setShowWhen(false)
                 .setContentTitle(appName)

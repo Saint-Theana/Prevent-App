@@ -50,7 +50,7 @@ public class ReflectUtils {
                 method.setAccessible(true);
                 METHOD_CACHES.put(key, method);
             }
-            return method.invoke(target, null);
+            return method.invoke(target, (Object[]) null);
         } catch (NoSuchMethodException e) {
             PreventLog.e("cannot find method " + name + " in " + target.getClass());
         } catch (InvocationTargetException e) {
@@ -103,7 +103,7 @@ public class ReflectUtils {
         try {
             return target.getClass().getMethod(name, parameterTypes);
         } catch (NoSuchMethodException e) {
-            Class superClass = target.getClass().getSuperclass();
+            Class<?> superClass = target.getClass().getSuperclass();
             while (superClass != null) {
                 try {
                     return superClass.getMethod(name, parameterTypes);

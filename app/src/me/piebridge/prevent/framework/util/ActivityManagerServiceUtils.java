@@ -31,8 +31,7 @@ public class ActivityManagerServiceUtils {
      * ID of stack that occupies a dedicated region of the screen.
      */
     public static final int DOCKED_STACK_ID = FREEFORM_WORKSPACE_STACK_ID + 1;
-    private ActivityManagerServiceUtils() {
-
+        private ActivityManagerServiceUtils() {
     }
 
     public static Set<String> getCurrentPackages() {

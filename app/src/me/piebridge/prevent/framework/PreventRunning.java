@@ -27,7 +27,6 @@ public class PreventRunning implements PreventRunningHook {
 
     private final ThreadLocal<String> mSender;
 
-
     public PreventRunning() {
         mSender = new ThreadLocal<String>();
         PreventLog.i("prevent running " + BuildConfig.VERSION_NAME);

@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import me.piebridge.prevent.common.GmsUtils;
 import me.piebridge.prevent.framework.PreventLog;
 import me.piebridge.prevent.framework.SystemHook;
 
@@ -138,7 +137,7 @@ public class SafeActionUtils {
         if (action == null) {
             return false;
         }
-        if (AppWidgetManager.ACTION_APPWIDGET_UPDATE.equals(action) || GmsUtils.isGcmAction(null, false, action)) {
+        if (AppWidgetManager.ACTION_APPWIDGET_UPDATE.equals(action) ) {
             return true;
         }
         return !action.startsWith("android.intent.action") && !AppGlobals.getPackageManager().isProtectedBroadcast(action);
@@ -164,7 +163,6 @@ public class SafeActionUtils {
     public static boolean cannotPrevent(Context context, ComponentName cn) {
         String packageName = cn.getPackageName();
         if (isSafeActionCache(safeActions, cn)) {
-            allowGmsIfNeeded(packageName);
             return true;
         }
         Collection<String> actions = SAFE_PACKAGE_ACTIONS.get(packageName);
@@ -174,19 +172,12 @@ public class SafeActionUtils {
         for (String action : actions) {
             if (isActionService(context, cn, action)) {
                 addSafeActions(safeActions, cn);
-                allowGmsIfNeeded(packageName);
                 return true;
             }
         }
         return false;
     }
 
-    private static void allowGmsIfNeeded(String packageName) {
-        if (GmsUtils.isGapps(packageName)) {
-            PreventLog.d("allow " + packageName + " to use gms for next service");
-            SystemHook.restoreLater(packageName);
-        }
-    }
 
     public static boolean isSafeAction(String packageName, String action) {
         Collection<String> actions = SAFE_PACKAGE_ACTIONS.get(packageName);
@@ -194,19 +185,12 @@ public class SafeActionUtils {
     }
 
     public static boolean isUnsafeService(ComponentName cn) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             ServiceInfo si = AppGlobals.getPackageManager().getServiceInfo(cn, 0, 0);
             return si != null && (JobService.PERMISSION_BIND.equals(si.permission)
                     || Manifest.permission.BIND_VOICE_INTERACTION.equals(si.permission));
-        } else {
-            return false;
-        }
     }
 
     public static ComponentName getSearchWidgetProvider(Context context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            return null;
-        }
         SearchManager searchManager = (SearchManager) context.getSystemService(Context.SEARCH_SERVICE);
         ComponentName searchActivity;
         try {
@@ -242,12 +226,8 @@ public class SafeActionUtils {
     }
 
     public static boolean isSafeService(ComponentName cn) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             ServiceInfo si = AppGlobals.getPackageManager().getServiceInfo(cn, 0, 0);
             return si != null && Manifest.permission.BIND_NFC_SERVICE.equals(si.permission);
-        } else {
-            return false;
-        }
     }
 
     public static boolean isSafeContentProvider(ComponentName component) {

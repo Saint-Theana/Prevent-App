@@ -20,7 +20,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import me.piebridge.prevent.BuildConfig;
 import me.piebridge.prevent.common.Configuration;
-import me.piebridge.prevent.common.GmsUtils;
 import me.piebridge.prevent.common.PackageUtils;
 import me.piebridge.prevent.framework.util.AccountUtils;
 import me.piebridge.prevent.framework.util.LogUtils;
@@ -50,11 +49,9 @@ public class ActivityManagerServiceHook {
 
     public static boolean hookStartProcessLocked(Context context, ApplicationInfo info, String hostingType, ComponentName hostingName, String sender) {
         String packageName = info.packageName;
-
         if (mContext == null && context != null) {
             SystemHook.retrievePreventsIfNeeded(context);
         }
-
         if (BuildConfig.DEBUG) {
             if (hostingName != null) {
                 PreventLog.v("startProcessLocked, hostingName: " + hostingName.flattenToShortString() + ", hostingType: " + hostingType + ", sender: " + sender);
@@ -62,16 +59,13 @@ public class ActivityManagerServiceHook {
                 PreventLog.v("startProcessLocked, packageName: " + packageName + ", hostingType: " + hostingType + ", sender: " + sender);
             }
         }
-
         if (mPreventPackages == null) {
             PreventLog.e("prevent list shouldn't be null");
             return true;
         }
-
         boolean prevents = Boolean.TRUE.equals(mPreventPackages.get(packageName));
         if ("activity".equals(hostingType)) {
             SystemHook.cancelCheck(packageName);
-            SystemHook.updateRunningGapps(packageName, true);
             if (prevents) {
                 // never block activity
                 mPreventPackages.put(packageName, false);
@@ -79,7 +73,6 @@ public class ActivityManagerServiceHook {
             }
             LogUtils.logStartProcess(packageName, hostingType, hostingName, sender);
         }
-
         return !prevents || hookDependency(hostingName, hostingType, packageName, sender);
     }
 
@@ -97,7 +90,6 @@ public class ActivityManagerServiceHook {
             LogUtils.logStartProcess(true, packageName, hostingType, hostingName, sender);
             return false;
         }
-
         SystemHook.checkRunningServices(packageName, false);
         LogUtils.logStartProcess(packageName, hostingType + "(should safe)", hostingName, sender);
         return true;
@@ -118,11 +110,8 @@ public class ActivityManagerServiceHook {
         if (SafeActionUtils.isSyncService(mContext, hostingName, sender)) {
             return hookSyncService(hostingName, hostingType, packageName, sender);
         }
-        if (SafeActionUtils.isAccountService(mContext, hostingName, sender)||PackageUtils.isInputMethod(mContext, packageName) ) {
+        if (SafeActionUtils.isAccountService(mContext, hostingName, sender) ) {
             return hookAccountService(hostingName, hostingType, packageName, sender);
-        }
-        if (GmsUtils.isGms(packageName)) {
-            return hookGmsService(hostingName, hostingType, packageName, sender);
         }
         if (cannotPrevent(sender, packageName, hostingName)) {
             SystemHook.checkRunningServices(packageName, true);
@@ -140,7 +129,7 @@ public class ActivityManagerServiceHook {
         if (settingsPackages.isEmpty()) {
             retrieveSettingsPackage(mContext.getPackageManager(), settingsPackages);
         }
-        if (isSettingPackageName(currentPackageName) ||PackageUtils.isInputMethod(mContext, packageName)  ||(GmsUtils.isGapps(packageName) && GmsUtils.isGapps(currentPackageName))) {
+        if (isSettingPackageName(currentPackageName)) {
             handleSafeService(packageName);
             SystemHook.checkRunningServices(packageName, true);
             LogUtils.logStartProcess(packageName, hostingType + "(account)", hostingName, sender);
@@ -167,17 +156,6 @@ public class ActivityManagerServiceHook {
         }
     }
 
-    private static boolean hookGmsService(ComponentName hostingName, String hostingType, String packageName, String sender) {
-        if (cannotPreventGms(hostingName, sender)) {
-            // only allow gapps to use gms
-            SystemHook.checkRunningServices(packageName, true);
-            LogUtils.logStartProcess(packageName, hostingType, hostingName, sender);
-            return true;
-        } else {
-            LogUtils.logStartProcess(true, packageName, hostingType, hostingName, sender);
-            return false;
-        }
-    }
 
     private static void retrieveSettingsPackage(PackageManager pm, Collection<String> packages) {
         Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
@@ -191,22 +169,6 @@ public class ActivityManagerServiceHook {
         }
     }
 
-    private static boolean cannotPreventGms(ComponentName component, String sender) {
-        if (GmsUtils.isGmsRegister(mContext, component)) {
-            return true;
-        }
-        PackageManager pm = mContext.getPackageManager();
-        if (settingsPackages.isEmpty()) {
-            retrieveSettingsPackage(pm, settingsPackages);
-        }
-        if (settingsPackages.contains(sender)) {
-            return true;
-        }
-        if (!GmsUtils.isGapps(sender)) {
-            return false;
-        }
-        return pm.getLaunchIntentForPackage(sender) == null || SystemHook.hasRunningActivity(sender);
-    }
 
     private static boolean cannotPrevent(String sender, String packageName) {
         if (SystemHook.isFramework(packageName)) {
@@ -263,8 +225,7 @@ public class ActivityManagerServiceHook {
     }
 
     public static boolean onCleanUpRemovedTask(final String packageName) {
-        SystemHook.updateRunningGapps(packageName, false);
-        if (PackageUtils.isInputMethod(mContext, packageName)) {
+        if (PackageUtils.isInputMethod(mContext,packageName)) {
             PreventLog.i("" + packageName + " is input method so will not be cleaned");
             return false;
         }

@@ -137,10 +137,9 @@ public class PreventRunningUtils {
 
 
     private static ActivityRecord forToken(IBinder iBinder) {
-        if (Build.VERSION.SDK_INT >= 23) {
+
             return ActivityRecord.forTokenLocked(iBinder);
-        }
-        return ActivityRecord.forToken(iBinder);
+        //return ActivityRecord.forToken(iBinder);
     }
 
 

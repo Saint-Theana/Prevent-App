@@ -93,7 +93,7 @@ public class PackageUtils {
         }
         if (isSystemSignaturePackage(pm, BuildConfig.APPLICATION_ID)) {
             // shouldn't happen, but for some abnormal rom
-            return GmsUtils.isGapps(appInfo.packageName);
+            return false;
         } else {
             return !isSystemSignaturePackage(pm, appInfo.packageName);
         }
@@ -112,20 +112,10 @@ public class PackageUtils {
         return (a == b) || (a != null && a.equals(b));
     }
 
-    public static boolean isInputMethod(Context context, String pkg) {
-        List<InputMethodInfo> inputMethods = ((InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE)).getEnabledInputMethodList();
-        int count = inputMethods == null ? 0 : inputMethods.size();
-        for (int i = 0; i < count; i++) {
-            if (inputMethods.get(i).getPackageName().equals(pkg)) {
-                return true;
-            }
-        }
-        return false;
-    }
 
-    public static boolean isInputMethod(String name) {
-        if (GmsUtils.isGapps(name) && !GmsUtils.isInputMethod(name)) {
-            return false;
+    public static boolean isInputMethod(Context context,String name) {
+        if (inputMethodPackages.isEmpty()) {
+            initInputMethods(context);
         }
         return inputMethodPackages.contains(name);
     }
@@ -143,17 +133,6 @@ public class PackageUtils {
         inputMethodPackages.clear();
     }
 
-    public static boolean isImportPackage(Context context, String name) {
-        if (name == null) {
-            return false;
-        }
-        if (inputMethodPackages.isEmpty()) {
-            initInputMethods(context);
-            smsDefaultApplication = Settings.Secure.getString(context.getContentResolver(), "sms_default_application");
-        }
-        return IMPORT_PACKAGES.contains(name)
-                || isInputMethod(name)
-                || name.equals(smsDefaultApplication);
-    }
+
 
 }

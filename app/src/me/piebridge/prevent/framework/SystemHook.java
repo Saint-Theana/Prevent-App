@@ -43,7 +43,6 @@ import java.util.concurrent.TimeUnit;
 
 import me.piebridge.prevent.BuildConfig;
 import me.piebridge.prevent.common.Configuration;
-import me.piebridge.prevent.common.GmsUtils;
 import me.piebridge.prevent.common.PackageUtils;
 import me.piebridge.prevent.common.PreventIntent;
 import me.piebridge.prevent.framework.util.AccountUtils;
@@ -227,14 +226,10 @@ public final class SystemHook {
         synchronized (CHECKING_LOCK) {
             serviceFuture = serviceFutures.get(packageName);
             if (serviceFuture != null && serviceFuture.getDelay(TimeUnit.SECONDS) > 0) {
-                GmsUtils.decreaseGmsCount(mContext, packageName);
                 serviceFuture.cancel(false);
             }
-            if (!GmsUtils.isGms(packageName)) {
                 checkingWhiteList.add(packageName);
-            }
         }
-        GmsUtils.increaseGmsCount(mContext, packageName);
         serviceFuture = checkingExecutor.schedule(new CheckingRunningService(mContext, mPreventPackages) {
             @Override
             protected Collection<String> preparePackageNames() {
@@ -245,27 +240,21 @@ public final class SystemHook {
             protected Collection<String> prepareWhiteList() {
                 return prepareServiceWhiteList(packageName, forcestop);
             }
-        }, GmsUtils.isGms(packageName) ? TIME_CHECK_GMS : TIME_CHECK_SERVICE, TimeUnit.SECONDS);
+        },  TIME_CHECK_SERVICE, TimeUnit.SECONDS);
         synchronized (CHECKING_LOCK) {
             serviceFutures.put(packageName, serviceFuture);
         }
     }
 
     private static Collection<String> prepareServiceWhiteList(String packageName, boolean forcestop) {
-        GmsUtils.decreaseGmsCount(mContext, packageName);
-        if (!GmsUtils.isGms(packageName)) {
             synchronized (CHECKING_LOCK) {
                 checkingWhiteList.remove(packageName);
             }
-        }
-        if (canStopGms()) {
             if (forcestop) {
                 forceStopPackageIfNeeded(packageName);
             }
             return Collections.emptyList();
-        } else {
-            return GmsUtils.getGmsPackages();
-        }
+
     }
 
     public static void cancelCheck(String packageName) {
@@ -338,9 +327,6 @@ public final class SystemHook {
         synchronized (CHECKING_LOCK) {
             whiteList.addAll(checkingWhiteList);
         }
-        if (!canStopGms()) {
-            whiteList.addAll(GmsUtils.getGmsPackages());
-        }
         return whiteList;
     }
 
@@ -362,7 +348,7 @@ public final class SystemHook {
                         return;
                     }
                     boolean a=forceStopPackage(packageName, false);
-                    PreventLog.d("forceStopPackage"+packageName);
+                    PreventLog.d("forceStopPackage "+packageName);
                 }catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -602,10 +588,10 @@ public final class SystemHook {
     }
 
     public static boolean isSystemPackage(String packageName) {
-        if (isFramework(packageName) || GmsUtils.isGms(packageName)) {
+        if (isFramework(packageName) ) {
             return true;
         }
-        if (packageName == null || GmsUtils.isGapps(packageName)) {
+        if (packageName == null ) {
             return false;
         }
         try {
@@ -681,7 +667,7 @@ public final class SystemHook {
     }
 
     public static boolean isUseAppStandby() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Configuration.getDefault().isUseAppStandby();
+        return  Configuration.getDefault().isUseAppStandby();
     }
 
     public static void setNotSupported() {
@@ -701,49 +687,8 @@ public final class SystemHook {
         SystemHook.supported = supported;
     }
 
-    public static void updateRunningGapps(String packageName, boolean added) {
-        if (mContext == null || packageName == null) {
-            return;
-        }
-        if (!added) {
-            resetSync(packageName);
-        }
-        PackageManager pm = mContext.getPackageManager();
-        if (GmsUtils.isGapps(packageName) && pm.getLaunchIntentForPackage(packageName) != null) {
-            if (added) {
-                if (!runningGapps.contains(packageName)) {
-                    PreventLog.d("add " + packageName + " to running gapps: " + runningGapps);
-                }
-                runningGapps.add(packageName);
-            } else {
-                if (runningGapps.contains(packageName)) {
-                    PreventLog.d("remove " + packageName + " from running gapps: " + runningGapps);
-                    checkRunningServices(null, SystemHook.TIME_CHECK_SERVICE);
-                }
-                runningGapps.remove(packageName);
-            }
-        }
-    }
 
-    public static boolean hasRunningGapps() {
-        Iterator<String> it = runningGapps.iterator();
-        int count = 0;
-        while (it.hasNext()) {
-            String packageName = it.next();
-            int counter = systemReceiver.countCounter(packageName);
-            if (counter == 0) {
-                it.remove();
-            } else if (counter > 1 || !PackageUtils.isLauncher(mContext.getPackageManager(), packageName)) {
-                count += 1;
-            }
-        }
-        if (count > 0) {
-            PreventLog.d("running gapps: " + runningGapps);
-            return true;
-        } else {
-            return false;
-        }
-    }
+
 
     public static void restoreLater(final String packageName) {
         systemReceiver.cancelCheckLeaving(packageName);
@@ -811,9 +756,6 @@ public final class SystemHook {
         return mContext;
     }
 
-    public static boolean canStopGms() {
-        return GmsUtils.canStopGms() && !SystemHook.hasRunningGapps();
-    }
 
     public static void onActivityRequestAudioFocus(int uid, int pid, String clientId, String packageName) {
         expired = true;
